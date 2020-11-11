@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Video
 from .forms import VideoForm, SearchForm
 from django.contrib import messages 
@@ -24,7 +24,7 @@ def add(request):
                 messages.warning(request, 'You already added that video')
             except ValidationError:
                 messages.warning(request, 'Invalid YouTube URL')
-            # todo redirect to list of videos
+            return redirect('video_list')
         else:
             messages.warning(request, 'Check the data entered')
             return render(request, 'video_collection/add.html', {'new_video_form': new_video_form}) 
