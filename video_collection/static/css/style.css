@@ -1,5 +1,5 @@
 body {
-    /* background-color: lightblue; */
+    background-color: lightblue;
     font-size: large;
 }
 
@@ -8,7 +8,7 @@ body {
 }
 
 .navigation > a {
-    color: lime;
+    color: darkgreen;
     padding-right: 30px;
 }
 
