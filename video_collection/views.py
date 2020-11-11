@@ -18,7 +18,6 @@ def add(request):
         if new_video_form.is_valid():
             try:
                 new_video_form.save()  # Creates new Video object and saves 
-                messages.info(request, 'New video saved!')
                 return redirect('video_list')
             except IntegrityError:
                 messages.warning(request, 'You already added that video')
@@ -40,11 +39,11 @@ def video_list(request):
 
     if search_form.is_valid():
         search_term = search_form.cleaned_data['search_term']
-        videos = Video.objects.filter(name__icontains=search_term).order_by('name')
+        videos = Video.objects.filter(name__icontains=search_term).order_by(Lower('name'))
 
     else:
         search_form = SearchForm()
-        videos = Video.objects.order_by('name')
+        videos = Video.objects.order_by(Lower('name'))
 
     return render(request, 'video_collection/video_list.html', {'videos': videos, 'search_form': search_form})
 
