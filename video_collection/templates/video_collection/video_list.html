@@ -1,0 +1,38 @@
+{% extends 'video_collection/base.html' %}
+{% block content %}
+
+<h2>Video List</h2>
+
+<h3>Search</h3>
+
+<form method="GET" action="{% url 'video_list' %}">
+    {{ search_form }}
+    <button type="submit">Search!</button>
+</form>
+
+<a href="{% url 'video_list' %}">
+    <button>Clear Search</button>
+</a>    
+
+
+<h3>{{ videos|length }} video{{ videos|length|pluralize }}</h3>
+
+
+{% for video in videos %}
+
+<div>
+    <h3>{{ video.name }}</h3>
+    <p>{{ video.notes }}</p>
+    <iframe width="420" height="315" src="https://youtube.com/embed/{{ video.video_id }}"></iframe>
+</div>
+
+{% endfor %}
+
+{% endblock %}
+
+
+
+
+
+
+
