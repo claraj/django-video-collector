@@ -7,7 +7,6 @@ from django.db import IntegrityError
 from django.db.models.functions import Lower
 
 
-
 def home(request):
     app_name = 'Exercise Videos'
     return render(request, 'video_collection/home.html', {'app_name': app_name})
@@ -20,14 +19,15 @@ def add(request):
             try:
                 new_video_form.save()  # Creates new Video object and saves 
                 messages.info(request, 'New video saved!')
+                return redirect('video_list')
             except IntegrityError:
                 messages.warning(request, 'You already added that video')
             except ValidationError:
                 messages.warning(request, 'Invalid YouTube URL')
-            return redirect('video_list')
-        else:
-            messages.warning(request, 'Check the data entered')
-            return render(request, 'video_collection/add.html', {'new_video_form': new_video_form}) 
+        
+        # Invalid form 
+        messages.warning(request, 'Check the data entered')
+        return render(request, 'video_collection/add.html', {'new_video_form': new_video_form}) 
             
         
     new_video_form = VideoForm()

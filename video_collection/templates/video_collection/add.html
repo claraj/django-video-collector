@@ -3,7 +3,7 @@
 {% block content %}
 
 {% for message in messages %}
-    {{ message }}
+    <li>{{ message }}</li>
 {% endfor %}
 
 <form method="POST" action="{% url 'add_video' %}">
