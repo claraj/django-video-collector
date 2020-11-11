@@ -34,9 +34,10 @@ class Video(models.Model):
 
     def __str__(self):
         # String displayed in the admin console, or when printing a model object. 
-        # You can return any useful string here. Optionally truncate notes to 200 characters.
+        # You can return any useful string here. Optionally 
+        if not self.notes:
+            notes = 'No notes'
+        else:
+            notes = self.notes[:200]
         return f'ID: {self.pk}, Name: {self.name}, URL: {self.url},  \
-        Video ID: {self.video_id},  Notes: {self.notes}'
-
-
-
+        Video ID: {self.video_id},  Notes: {notes}'

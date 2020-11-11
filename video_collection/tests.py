@@ -226,7 +226,6 @@ class TestVideoModel(TestCase):
 
 
     def duplicate_video_raises_integrity_error(self):
-
         Video.objects.create(name='example', url='https://www.youtube.com/watch?v=IODxDxX7oi4')
         with self.assertRaises(IntegrityError):
             Video.objects.create(name='example', url='https://www.youtube.com/watch?v=IODxDxX7oi4')
