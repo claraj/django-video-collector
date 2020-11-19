@@ -28,9 +28,10 @@ class TestVideoList(TestCase):
         response = self.client.get(reverse('video_list'))
         videos_in_template = response.context['videos']
         self.assertContains(response, 'No videos.')
+        self.assertEquals(0, len(videos_in_template))
 
 
-    # 1 video vs 3 videos message
+    # 1 video vs 4 videos message
 
     def test_video_number_message_single_video(self):
         v1 = Video.objects.create(name='XYZ', notes='example', url='https://www.youtube.com/watch?v=123')
@@ -85,7 +86,7 @@ class TestAddVideos(TestCase):
         valid_video = {
             'name': 'yoga',
             'url': 'https://www.youtube.com/watch?v=4vTJHUDB5ak',
-            'notes': 'for neck and shoulders'
+            'notes': 'yoga for neck and shoulders'
         }
         
         response = self.client.post(reverse('add_video'), data=valid_video, follow=True)
@@ -96,7 +97,7 @@ class TestAddVideos(TestCase):
         # video list shows new video 
         self.assertContains(response, 'yoga')
         self.assertContains(response, 'https://www.youtube.com/watch?v=4vTJHUDB5ak')
-        self.assertContains(response, 'for neck and shoulders')
+        self.assertContains(response, 'yoga for neck and shoulders')
 
         # one new video in the database 
         video_count = Video.objects.count()
@@ -154,6 +155,7 @@ class TestAddVideos(TestCase):
         video_count = Video.objects.count()
         self.assertEqual(1, video_count)
 
+
     def test_add_video_invalid_url_not_added(self):
 
         invalid_video_urls = [
@@ -170,7 +172,7 @@ class TestAddVideos(TestCase):
             new_video = {
                 'name': 'yoga',
                 'url': invalid_url,
-                'notes': 'for neck and shoulders'
+                'notes': 'yoga for neck and shoulders'
             }
 
             response = self.client.post(reverse('add_video'), data=new_video, follow=True)
