@@ -15,8 +15,6 @@ class Video(models.Model):
         # extract the video id from the URL, prevent save if not valid YouTube URL or id ID is not found in URL
         try:
             url_components = parse.urlparse(self.url)
-            
-            url_components = parse.urlparse(self.url)
 
             if url_components.scheme != 'https':
                 raise ValidationError(f'Not a YouTube URL {self.url}')
