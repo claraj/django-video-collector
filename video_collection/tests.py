@@ -107,8 +107,46 @@ class TestAddVideos(TestCase):
         self.assertEqual(expected_videos_in_context, videos_in_context)
 
 
-    # Invalid videos not added
+    # Notes are optional
+    def test_add_video_no_notes_video_added(self):
+        
+        add_video_url = reverse('add_video')
 
+        valid_video = {
+            'name': 'yoga',
+            'url': 'https://www.youtube.com/watch?v=4vTJHUDB5ak',
+            # no notes
+        }
+        
+        # follow=True necessary because the view redirects to the video list after a video is successfully added.
+        response = self.client.post(add_video_url, data=valid_video, follow=True)
+
+        # redirect to video list 
+        self.assertTemplateUsed('video_collection/video_list.html')
+
+        # video list shows new video 
+        self.assertContains(response, 'yoga')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=4vTJHUDB5ak')
+        
+        # video count on page is correct 
+        self.assertContains(response, '1 video')
+        self.assertNotContains(response, '1 videos')  # and the non-plural form is used
+
+        # one new video in the database 
+        video_count = Video.objects.count()
+        self.assertEqual(1, video_count)
+
+        # get that video - if there's 1 video it must be the one added
+        video = Video.objects.first() 
+
+        self.assertEqual('yoga', video.name)
+        self.assertEqual('https://www.youtube.com/watch?v=4vTJHUDB5ak', video.url)
+        self.assertEquals('', video.notes)
+        self.assertEqual('4vTJHUDB5ak', video.video_id)
+
+
+
+    # Invalid videos not added
 
     def test_add_video_missing_fields(self):
 
