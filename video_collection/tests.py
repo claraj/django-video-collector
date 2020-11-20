@@ -20,6 +20,8 @@ class TestAddVideos(TestCase):
 
     def test_add_video(self):
 
+        add_video_url = reverse('add_video')
+
         valid_video = {
             'name': 'yoga',
             'url': 'https://www.youtube.com/watch?v=4vTJHUDB5ak',
@@ -27,7 +29,7 @@ class TestAddVideos(TestCase):
         }
         
         # follow=True necessary because the view redirects to the video list after a video is successfully added.
-        response = self.client.post(reverse('add_video'), data=valid_video, follow=True)
+        response = self.client.post(add_video_url, data=valid_video, follow=True)
 
         # redirect to video list 
         self.assertTemplateUsed('video_collection/video_list.html')
@@ -36,6 +38,10 @@ class TestAddVideos(TestCase):
         self.assertContains(response, 'yoga')
         self.assertContains(response, 'https://www.youtube.com/watch?v=4vTJHUDB5ak')
         self.assertContains(response, 'yoga for neck and shoulders')
+
+        # video count on page is correct 
+        self.assertContains(response, '1 video')
+        self.assertNotContains(response, '1 videos')  # and the non-plural form is used
 
         # one new video in the database 
         video_count = Video.objects.count()
@@ -50,8 +56,115 @@ class TestAddVideos(TestCase):
         self.assertEqual('4vTJHUDB5ak', video.video_id)
 
 
+
+        # add another video - both present? 
+
+        valid_video_2 = {
+            'name': 'full body workout',
+            'url': 'https://www.youtube.com/watch?v=IFQmOZqvtWg',
+            'notes': '30 minutes of aerobics'
+        }
+        
+        # follow=True necessary because the view redirects to the video list after a video is successfully added.
+        response = self.client.post(add_video_url, data=valid_video_2, follow=True)
+
+        # redirect to video list 
+        self.assertTemplateUsed('video_collection/video_list.html')
+
+        # video count on page is correct 
+        self.assertContains(response, '2 videos')
+
+        # video list shows both new videos
+
+
+        # video 1, 
+        self.assertContains(response, 'yoga')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=4vTJHUDB5ak')
+        self.assertContains(response, 'yoga for neck and shoulders')
+
+        # and video 2
+        self.assertContains(response, 'full body workout')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=IFQmOZqvtWg')
+        self.assertContains(response, '30 minutes of aerobics')
+
+        # database contains two videos 
+        self.assertEqual(2, Video.objects.count())
+
+        # both video present on page? Another way to check is to query for a video with all the expected data. 
+        # the get method will raise a DoesNotExist error if a matching video is not found, and that will cause the test to fail
+
+        video_1_in_db = Video.objects.get(name='yoga', url='https://www.youtube.com/watch?v=4vTJHUDB5ak', \
+        notes='yoga for neck and shoulders', video_id='4vTJHUDB5ak')
+        
+        video_2_in_db = Video.objects.get(name='full body workout', url='https://www.youtube.com/watch?v=IFQmOZqvtWg', \
+        notes='30 minutes of aerobics', video_id='IFQmOZqvtWg')
+
+
+        # how about the correct videeos in the context?
+        videos_in_context = list(response.context['videos'])   # the object in the response is from a database query, so it's a QuerySet object. Convert to a list
+
+        expected_videos_in_context = [video_2_in_db, video_1_in_db]  # in this order, because they'll be sorted by name 
+        self.assertEqual(expected_videos_in_context, videos_in_context)
+
+
     # Invalid videos not added
-    #  - Duplicates not allowed
+
+
+    def test_add_video_missing_fields(self):
+
+        add_video_url = reverse('add_video')
+
+        invalid_videos = [
+            {
+                'name': '',   # no name, should not be allowed 
+                'url': 'https://www.youtube.com/watch?v=4vTJHUDB5ak',
+                'notes': 'yoga for neck and shoulders'
+            },
+            {
+                # no name field
+                'url': 'https://www.youtube.com/watch?v=4vTJHUDB5ak',
+                'notes': 'yoga for neck and shoulders'
+            },
+            {
+                'name': 'example',   
+                'url': '',   # no URL, should not be allowed 
+                'notes': 'yoga for neck and shoulders'
+            },
+            {
+                'name': 'example',  
+                # no URL 
+                'notes': 'yoga for neck and shoulders'
+            },
+            {
+                # no name
+                # no URL
+                'notes': 'yoga for neck and shoulders'
+            },
+            {
+                'name': '',   # blank - not allowed 
+                'url': '',   # no URL, should not be allowed 
+                'notes': 'yoga for neck and shoulders'
+            },
+
+        ]
+
+        
+        for invalid_video in invalid_videos:
+
+            # follow=True not necessary because if video not valid, will expect a simple response
+            response = self.client.post(add_video_url, data=invalid_video)
+
+            self.assertTemplateUsed('video_collection/add_video.html')  # still on add page 
+            self.assertEqual(0, Video.objects.count())  # no video added to database 
+            messages = response.context['messages']    # get the messages
+            message_texts = [ message.message for message in messages ]   # and the message texts
+            self.assertIn('Check the data entered', message_texts)   # is this message one of the messages? 
+
+            # And we can also check that message is displayed on the page 
+            self.assertContains(response, 'Check the data entered')
+
+
+    #  Duplicates not allowed
 
     def test_add_duplicate_video_not_added(self):
 
@@ -91,6 +204,8 @@ class TestAddVideos(TestCase):
             messages = response.context['messages']
             message_texts = [ message.message for message in messages ]
             self.assertIn('You already added that video', message_texts)
+
+            self.assertContains(response, 'You already added that video')  # and message displayed on page 
 
         # still one video in the database 
         video_count = Video.objects.count()
@@ -138,9 +253,15 @@ class TestAddVideos(TestCase):
             # same template, the add form 
             self.assertTemplateUsed('video_collection/add.html')
 
+            # Messages set correctly?
             messages = response.context['messages']
             message_texts = [ message.message for message in messages ]
+            self.assertIn('Check the data entered', message_texts)
             self.assertIn('Invalid YouTube URL', message_texts)
+
+            # and messages displayed on page
+            self.assertContains(response, 'Check the data entered')
+            self.assertContains(response, 'Invalid YouTube URL')
 
             # no videos in the database 
             video_count = Video.objects.count()
@@ -162,6 +283,7 @@ class TestVideoList(TestCase):
         response = self.client.get(reverse('video_list'))
         videos_in_template = list(response.context['videos'])
         self.assertEqual(expected_video_order, videos_in_template)
+
 
     # No video message 
 
