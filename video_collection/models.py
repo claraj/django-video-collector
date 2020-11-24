@@ -1,6 +1,7 @@
 from urllib import parse 
 from django.db import models
 from django.core.exceptions import ValidationError
+import requests
 
 class Video(models.Model):
     name = models.CharField(max_length=200)
@@ -32,7 +33,13 @@ class Video(models.Model):
             parameter_list = parameters.get('v')
             if not parameter_list:   # empty string, empty list... 
                 raise ValidationError(f'Invalid YouTube URL parameters {self.url}')
-            self.video_id = parameter_list[0]   # set the video ID for this Video object 
+            
+            if parameter_list:
+                request = requests.get(self.url)
+                if "Video unavailable" in request.text:
+                    raise ValidationError(f'YouTube Video Not Exist.')
+                else:
+                    self.video_id = parameter_list[0]   # set the video ID for this Video object 
         except ValueError as e:   # URL parsing errors, malformed URLs
             raise ValidationError(f'Unable to parse URL {self.url}') from e
 
