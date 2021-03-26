@@ -1,7 +1,5 @@
 # Django Video Collector
 
-To install app .... 
+An example Django app. 
 
-Environment variable setup ....
-
-To run app ... 
+Forms, model save method
